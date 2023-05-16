@@ -5,7 +5,7 @@ An example of a step using MLflow and Weights & Biases]: Download from W&B the r
 import argparse
 import logging
 import wandb
-
+import panda
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
@@ -13,17 +13,40 @@ logger = logging.getLogger()
 
 def go(args):
 
-    run = wandb.init(job_type="basic_cleaning")
+    run = wandb.init(project="nyc_aribnb", job_type="basic_cleaning")
     run.config.update(args)
 
-    # Download input artifact. This will also log that this script is using this
-    # particular version of the artifact
-    # artifact_local_path = run.use_artifact(args.input_artifact).file()
+    logger.info("Starting download the artifact with name {0}".format(args.input_artifact))
+    local_path = wandb.use_artifact("{0}:latest".format(args.input_artifact)) 
+    logger.info("Artifact with name {0} has been downloaded".format(args.input_artifact))
 
-    ######################
-    # YOUR CODE HERE     #
-    ######################
+    logger.info("Starting reading the file and extracting its data frame content")
+    df = pd.read_csv(local_path)
+    logger.info("CSV file has been read and assigned to a data frame variable")
 
+    # get rid of outliers
+    logger.info("Starting ged rid of outliers process")
+    min_price, max_price = args.min_price, args.max_price
+    remaining = df['price'].between(min_price, max_price)
+    df = df[remaining].copy()
+    logger.info("Get rid ouf outliers finished.")
+    
+    # save it a csv
+    logger.info("Starting saving the data frame to csv.")
+    df.to_csv(fileName, index=False)
+    logger.info("Data frame has been saved to csv file.")
+
+    # upload the data to wandb
+    artifact = wandb.Artifact(
+            args.output_artifact,
+            type=args.output_type,
+            description=args.output_description,
+    )
+    artifact.add_file(fileName)
+    run.log_artifact(artifact)
+
+    # finish the run
+    run.finish()
 
 if __name__ == "__main__":
 
@@ -33,42 +56,42 @@ if __name__ == "__main__":
     parser.add_argument(
         "--input_artifact", 
         type=str,
-        help="Input artifact",
+        help="The input artifact",
         required=True
     )
 
     parser.add_argument(
         "--output_artifact", 
         type=str,
-        help="Output artifact",
+        help="The name for the output artifact",
         required=True
     )
 
     parser.add_argument(
         "--output_type", 
         type=str,
-        help="The output type",
+        help="The type for the output artifact",
         required=True
     )
 
     parser.add_argument(
         "--output_description", 
         type=str,
-        help="The output description",
+        help="A description for the output artifact",
         required=True
     )
 
     parser.add_argument(
         "--min_price", 
         type=float,
-        help="Min price",
+        help="The minimum price to consider",
         required=True
     )
 
     parser.add_argument(
         "--max_price", 
         type=float,
-        help="Max price",
+        help="Max maximum price to consider",
         required=True
     )
 

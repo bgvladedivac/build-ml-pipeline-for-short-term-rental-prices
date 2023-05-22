@@ -5,7 +5,6 @@ An example of a step using MLflow and Weights & Biases]: Download from W&B the r
 import argparse
 import logging
 import wandb
-import panda
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)-15s %(message)s")
 logger = logging.getLogger()
@@ -17,7 +16,7 @@ def go(args):
     run.config.update(args)
 
     logger.info("Starting download the artifact with name {0}".format(args.input_artifact))
-    local_path = wandb.use_artifact("{0}:latest".format(args.input_artifact)) 
+    local_path = wandb.use_artifact("{0}".format(args.input_artifact)) 
     logger.info("Artifact with name {0} has been downloaded".format(args.input_artifact))
 
     logger.info("Starting reading the file and extracting its data frame content")

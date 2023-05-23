@@ -77,10 +77,16 @@ def go(config: DictConfig):
             )
 
         if "data_split" in active_steps:
-            ##################
-            # Implement here #
-            ##################
-            pass
+            _ = mlflow.run(
+                    os.path.join(root_path, "components", "data_split"),
+                    "main",
+                    parameters={
+                        "input_data": "nyc_airbnb/clean_data.csv:latest",
+                        "test_size": config['data']['test_size'],
+                        "random_state": config['main']['random_state'],
+                        "stratify": config['data']['stratify']
+                    },
+            )
 
         if "train_random_forest" in active_steps:
 
